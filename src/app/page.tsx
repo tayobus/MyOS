@@ -8,13 +8,13 @@ export default async function Home() {
   const initialTasks = docs.map(serializeTask);
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10 dark:bg-gray-950">
-      <div className="mx-auto max-w-xl">
-        <h1 className="mb-6 text-2xl font-bold text-gray-800 dark:text-gray-100">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-10 dark:bg-gray-950">
+      <div className="w-full max-w-xl space-y-6">
+        <h1 className="text-center text-2xl font-bold text-gray-800 dark:text-gray-100">
           할일 목록
         </h1>
+        <TaskBoard initialTasks={initialTasks} />
       </div>
-      <TaskBoard initialTasks={initialTasks} />
     </main>
   );
 }
