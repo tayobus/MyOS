@@ -2,6 +2,8 @@ import { getTaskCollection } from "@/lib/tasks";
 import { serializeTask } from "@/types/task";
 import TaskBoard from "@/components/TaskBoard";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const col = await getTaskCollection();
   const docs = await col.find().sort({ order: 1 }).toArray();

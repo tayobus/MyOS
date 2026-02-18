@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getTaskCollection } from "@/lib/tasks";
 import { serializeTask, TaskDocument } from "@/types/task";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/tasks — 전체 태스크 목록 (order 순)
 export async function GET() {
   const col = await getTaskCollection();
