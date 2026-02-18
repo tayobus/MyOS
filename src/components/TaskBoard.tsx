@@ -79,6 +79,7 @@ export default function TaskBoard({ initialTasks }: Props) {
       id: tempId,
       title: "새 태스크",
       duration: 25,
+      memo: "",
       order: tasks.length,
       createdAt: new Date().toISOString(), // 임시 생성 시간
     };
@@ -113,7 +114,7 @@ export default function TaskBoard({ initialTasks }: Props) {
 
   // 태스크 수정 - 낙관적 업데이트 적용
   const handleUpdate = useCallback(
-    async (id: string, fields: Partial<Pick<Task, "title" | "duration">>) => {
+    async (id: string, fields: Partial<Pick<Task, "title" | "duration" | "memo">>) => {
       // 이전 상태 저장
       const previousTasks = [...tasks];
 

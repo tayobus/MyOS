@@ -5,6 +5,7 @@ export interface Task {
   id: string;
   title: string;
   duration: number; // 분 단위
+  memo: string;
   order: number;
   createdAt: string; // ISO 8601
 }
@@ -14,6 +15,7 @@ export interface TaskDocument {
   _id: ObjectId;
   title: string;
   duration: number;
+  memo: string;
   order: number;
   createdAt: Date;
 }
@@ -24,6 +26,7 @@ export function serializeTask(doc: TaskDocument): Task {
     id: doc._id.toHexString(),
     title: doc.title,
     duration: doc.duration,
+    memo: doc.memo ?? "",
     order: doc.order,
     createdAt: doc.createdAt.toISOString(),
   };

@@ -33,6 +33,7 @@ export async function POST(req: Request) {
   const doc = {
     title: title.trim(),
     duration,
+    memo: "",
     order,
     createdAt: new Date(),
   };

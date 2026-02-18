@@ -23,6 +23,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     update.title = body.title.trim();
   }
+  if (body.memo !== undefined) {
+    if (typeof body.memo !== "string") {
+      return NextResponse.json({ error: "memo는 문자열이어야 합니다" }, { status: 400 });
+    }
+    update.memo = body.memo;
+  }
   if (body.duration !== undefined) {
     if (typeof body.duration !== "number" || !Number.isInteger(body.duration) || body.duration < 0) {
       return NextResponse.json(
