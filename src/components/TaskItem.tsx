@@ -27,6 +27,13 @@ export default function TaskItem({ task, onUpdate, onDelete, isOverlay }: Props)
     setDuration(String(task.duration));
   }, [task.duration]);
 
+  // 새 태스크 생성 시 자동 포커스
+  useEffect(() => {
+    if (task.title === "새 태스크" && titleRef.current && !isOverlay) {
+      titleRef.current.select();
+    }
+  }, []);
+
   const {
     attributes,
     listeners,
@@ -39,7 +46,8 @@ export default function TaskItem({ task, onUpdate, onDelete, isOverlay }: Props)
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isDragging ? 999 : "auto",
   };
 
   // title 편집 완료
@@ -73,63 +81,73 @@ export default function TaskItem({ task, onUpdate, onDelete, isOverlay }: Props)
     <div
       ref={isOverlay ? undefined : setNodeRef}
       style={isOverlay ? undefined : style}
-      className={`flex items-center gap-3 rounded-lg border bg-white px-4 py-3 shadow-sm dark:bg-gray-900 ${
-        isOverlay ? "shadow-lg ring-2 ring-blue-400" : "border-gray-200 dark:border-gray-700"
+      className={`group flex items-center gap-3 rounded-xl border px-4 py-3.5 transition-all duration-200 ${
+        isOverlay
+          ? "bg-white shadow-2xl ring-2 ring-indigo-500 scale-105 rotate-1 cursor-grabbing z-50 border-indigo-100 dark:bg-slate-800 dark:border-indigo-500"
+          : "bg-white hover:border-indigo-200 hover:shadow-md border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600"
       }`}
     >
       {/* 드래그 핸들 */}
       <button
-        className="cursor-grab touch-none text-gray-400 hover:text-gray-600"
+        className={`cursor-grab touch-none p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${
+          isOverlay ? "cursor-grabbing text-indigo-500" : "text-slate-400 hover:text-slate-600 dark:text-slate-500"
+        }`}
         {...(isOverlay ? {} : { ...attributes, ...listeners })}
         aria-label="드래그하여 순서 변경"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <circle cx="5" cy="3" r="1.5" />
-          <circle cx="11" cy="3" r="1.5" />
-          <circle cx="5" cy="8" r="1.5" />
-          <circle cx="11" cy="8" r="1.5" />
-          <circle cx="5" cy="13" r="1.5" />
-          <circle cx="11" cy="13" r="1.5" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="9" cy="12" r="1" />
+          <circle cx="9" cy="5" r="1" />
+          <circle cx="9" cy="19" r="1" />
+          <circle cx="15" cy="12" r="1" />
+          <circle cx="15" cy="5" r="1" />
+          <circle cx="15" cy="19" r="1" />
         </svg>
       </button>
 
       {/* 태스크명 */}
-      <input
-        ref={titleRef}
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onBlur={handleTitleBlur}
-        onKeyDown={handleKeyDown}
-        className="min-w-0 flex-1 border-0 bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-gray-200"
-        placeholder="할일을 입력하세요"
-      />
+      <div className="flex-1 min-w-0">
+        <input
+          ref={titleRef}
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={handleTitleBlur}
+          onKeyDown={handleKeyDown}
+          className="w-full bg-transparent text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium dark:text-slate-200"
+          placeholder="할일을 입력하세요"
+        />
+      </div>
 
       {/* 소요시간 */}
-      <div className="flex items-center gap-1 text-sm text-gray-500">
-        <input
-          ref={durationRef}
-          type="number"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-          onBlur={handleDurationBlur}
-          onKeyDown={handleKeyDown}
-          min={0}
-          className="w-12 border-0 bg-transparent text-right text-sm text-gray-600 outline-none focus:ring-0 dark:text-gray-300"
-        />
-        <span className="whitespace-nowrap text-xs text-gray-400">
-          {formatDuration(parseInt(duration, 10) || 0)}
-        </span>
+      <div className="flex items-center gap-2 pl-3 border-l border-slate-100 dark:border-slate-700">
+        <div className="flex items-center bg-slate-50 px-2 py-1 rounded-md border border-slate-100 focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500 dark:bg-slate-900 dark:border-slate-700">
+          <input
+            ref={durationRef}
+            type="number"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            onBlur={handleDurationBlur}
+            onKeyDown={handleKeyDown}
+            min={0}
+            className="w-8 bg-transparent text-right text-sm text-slate-600 outline-none font-medium appearance-none dark:text-slate-300"
+          />
+          <span className="text-xs text-slate-400 ml-1">분</span>
+        </div>
       </div>
 
       {/* 삭제 버튼 */}
       <button
         onClick={() => onDelete(task.id)}
-        className="text-gray-300 hover:text-red-500"
+        className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 dark:text-slate-600 dark:hover:bg-red-900/20"
         aria-label="삭제"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+          <line x1="10" y1="11" x2="10" y2="17" />
+          <line x1="14" y1="11" x2="14" y2="17" />
         </svg>
       </button>
     </div>
