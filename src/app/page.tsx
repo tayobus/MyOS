@@ -20,11 +20,8 @@ export default async function Home() {
         <div className="w-full max-w-xl space-y-8">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl">
-              오늘의 할일
+              My Tasks
             </h1>
-            <p className="text-slate-500 dark:text-slate-400">
-              효율적인 시간 관리를 위한 나만의 스케줄러
-            </p>
           </div>
           
           <TaskBoard initialTasks={initialTasks} />
