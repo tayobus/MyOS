@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
 import { serializeTask, TaskDocument } from "@/types/task";
 
@@ -14,7 +15,7 @@ export async function GET() {
 // POST /api/tasks — 태스크 생성
 export async function POST(req: Request) {
   const body = await req.json();
-  const { title, duration } = body;
+  const { title, duration, groupId } = body;
 
   if (!title || typeof title !== "string" || title.trim() === "") {
     return NextResponse.json({ error: "title은 필수입니다" }, { status: 400 });
@@ -26,8 +27,20 @@ export async function POST(req: Request) {
     );
   }
 
+  // groupId 파싱 (선택적)
+  let parsedGroupId: ObjectId | null = null;
+  if (groupId !== undefined && groupId !== null) {
+    try {
+      parsedGroupId = new ObjectId(groupId);
+    } catch {
+      return NextResponse.json({ error: "잘못된 groupId 형식입니다" }, { status: 400 });
+    }
+  }
+
   const col = await getTaskCollection();
-  const last = await col.find().sort({ order: -1 }).limit(1).toArray();
+  // 같은 그룹 내 최대 order 계산
+  const filter = parsedGroupId ? { groupId: parsedGroupId } : { groupId: null };
+  const last = await col.find(filter).sort({ order: -1 }).limit(1).toArray();
   const order = last.length > 0 ? last[0].order + 1 : 0;
 
   const doc = {
@@ -35,6 +48,7 @@ export async function POST(req: Request) {
     duration,
     memo: "",
     order,
+    groupId: parsedGroupId,
     createdAt: new Date(),
   };
 

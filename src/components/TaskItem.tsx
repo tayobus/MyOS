@@ -47,7 +47,7 @@ export default function TaskItem({ task, onUpdate, onDelete, isOverlay }: Props)
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: `task::${task.id}` });
 
   const style = {
     transform: CSS.Transform.toString(transform),

@@ -38,6 +38,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     update.duration = body.duration;
   }
+  if (body.groupId !== undefined) {
+    if (body.groupId === null) {
+      update.groupId = null;
+    } else {
+      try {
+        update.groupId = new ObjectId(body.groupId);
+      } catch {
+        return NextResponse.json({ error: "잘못된 groupId 형식입니다" }, { status: 400 });
+      }
+    }
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "수정할 필드가 없습니다" }, { status: 400 });
