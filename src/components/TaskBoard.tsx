@@ -176,15 +176,13 @@ export default function TaskBoard({ initialTasks }: Props) {
     if (!over || active.id === over.id) return;
 
     const previousTasks = [...tasks];
-    let reordered: Task[] = [];
+
+    const oldIndex = tasks.findIndex((t) => t.id === active.id);
+    const newIndex = tasks.findIndex((t) => t.id === over.id);
+    const reordered = arrayMove(tasks, oldIndex, newIndex);
 
     // 낙관적 업데이트
-    setTasks((current) => {
-      const oldIndex = current.findIndex((t) => t.id === active.id);
-      const newIndex = current.findIndex((t) => t.id === over.id);
-      reordered = arrayMove(current, oldIndex, newIndex);
-      return reordered;
-    });
+    setTasks(reordered);
 
     // 임시 ID가 포함된 경우 서버 요청 제외
     const validOrderedIds = reordered
@@ -220,8 +218,8 @@ export default function TaskBoard({ initialTasks }: Props) {
           <div
             key={toast.id}
             className={`pointer-events-auto px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in transition-all transform translate-y-0 opacity-100 ${toast.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
               }`}
           >
             {toast.message}
