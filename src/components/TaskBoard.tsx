@@ -334,8 +334,6 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
 
     if (overId === "droppable::ungrouped") {
       targetGroupId = null;
-    } else if (overId.startsWith("droppable::")) {
-      targetGroupId = overId.replace("droppable::", "");
     } else if (overId.startsWith("group::")) {
       // 그룹 카드 자체에 드롭된 경우 (특히 빈 그룹)
       targetGroupId = overId.replace("group::", "");

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback } from "react";
-import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -40,23 +39,15 @@ export default function GroupCard({
     transform,
     transition,
     isDragging,
+    isOver,
   } = useSortable({ id: `group::${group.id}` });
 
-  // 단일 droppable ref (항상 마운트된 wrapper에 연결)
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-    id: `droppable::${group.id}`,
-    data: { type: "group", groupId: group.id },
-  });
-
-  // 두 ref를 합치는 콜백
-  const mergedRef = useCallback(
+  // overlay에서는 ref 불필요
+  const nodeRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (!isOverlay) {
-        setSortableRef(node);
-        setDroppableRef(node);
-      }
+      if (!isOverlay) setSortableRef(node);
     },
-    [isOverlay, setSortableRef, setDroppableRef],
+    [isOverlay, setSortableRef],
   );
 
   const style = isOverlay
@@ -71,7 +62,7 @@ export default function GroupCard({
 
   return (
     <div
-      ref={mergedRef}
+      ref={nodeRef}
       style={style}
       className={`group/card rounded-2xl border transition-all duration-200 ${isOverlay
           ? "bg-slate-50 shadow-2xl ring-2 ring-indigo-500 scale-[1.02] rotate-[0.5deg] border-indigo-200 dark:bg-slate-900 dark:border-indigo-500"
