@@ -56,9 +56,8 @@ function UngroupedDropZone({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-3 min-h-[8px] rounded-xl transition-colors ${
-        isOver ? "bg-indigo-50/50 dark:bg-indigo-950/20" : ""
-      }`}
+      className={`flex flex-col gap-3 min-h-[8px] rounded-xl transition-colors ${isOver ? "bg-indigo-50/50 dark:bg-indigo-950/20" : ""
+        }`}
     >
       {children}
     </div>
@@ -337,6 +336,9 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
       targetGroupId = null;
     } else if (overId.startsWith("droppable::")) {
       targetGroupId = overId.replace("droppable::", "");
+    } else if (overId.startsWith("group::")) {
+      // 그룹 카드 자체에 드롭된 경우 (특히 빈 그룹)
+      targetGroupId = overId.replace("group::", "");
     } else if (overId.startsWith("task::")) {
       overTaskId = overId.replace("task::", "");
       const overTask = tasks.find((t) => t.id === overTaskId);
@@ -469,11 +471,10 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in transition-all transform translate-y-0 opacity-100 ${
-              toast.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}
+            className={`pointer-events-auto px-4 py-2 rounded-lg shadow-lg text-sm font-medium animate-fade-in transition-all transform translate-y-0 opacity-100 ${toast.type === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+              }`}
           >
             {toast.message}
           </div>
@@ -541,8 +542,8 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
           {activeItem?.type === "task" && (
             <TaskItem
               task={activeItem.data}
-              onUpdate={() => {}}
-              onDelete={() => {}}
+              onUpdate={() => { }}
+              onDelete={() => { }}
               isOverlay
             />
           )}
@@ -550,11 +551,11 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
             <GroupCard
               group={activeItem.data}
               tasks={tasksByGroup.get(activeItem.data.id) ?? []}
-              onUpdateGroup={() => {}}
-              onDeleteGroup={() => {}}
-              onUpdateTask={() => {}}
-              onDeleteTask={() => {}}
-              onAddTask={() => {}}
+              onUpdateGroup={() => { }}
+              onDeleteGroup={() => { }}
+              onUpdateTask={() => { }}
+              onDeleteTask={() => { }}
+              onAddTask={() => { }}
               isOverlay
             />
           )}

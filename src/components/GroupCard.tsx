@@ -62,10 +62,10 @@ export default function GroupCard({
   const style = isOverlay
     ? undefined
     : {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.3 : 1,
-      };
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.3 : 1,
+    };
 
   const dragHandleProps = isOverlay ? {} : { ...attributes, ...listeners };
 
@@ -73,13 +73,11 @@ export default function GroupCard({
     <div
       ref={mergedRef}
       style={style}
-      className={`group/card rounded-2xl border transition-all duration-200 ${
-        isOverlay
+      className={`group/card rounded-2xl border transition-all duration-200 ${isOverlay
           ? "bg-slate-50 shadow-2xl ring-2 ring-indigo-500 scale-[1.02] rotate-[0.5deg] border-indigo-200 dark:bg-slate-900 dark:border-indigo-500"
-          : `bg-slate-50/80 border-slate-200/80 dark:bg-slate-900/50 dark:border-slate-700/80 ${
-              isOver ? "ring-2 ring-indigo-300 border-indigo-200 dark:ring-indigo-600 dark:border-indigo-700" : ""
-            }`
-      }`}
+          : `bg-slate-50/80 border-slate-200/80 dark:bg-slate-900/50 dark:border-slate-700/80 ${isOver ? "ring-2 ring-indigo-300 border-indigo-200 dark:ring-indigo-600 dark:border-indigo-700" : ""
+          }`
+        }`}
     >
       <GroupHeader
         group={group}
@@ -132,11 +130,10 @@ export default function GroupCard({
       {/* 접힌 상태에서도 드롭 가능 영역 표시 */}
       {group.collapsed && (
         <div
-          className={`mx-3 mb-3 rounded-lg transition-colors ${
-            isOver
+          className={`mx-3 mb-3 rounded-lg transition-colors ${isOver
               ? "h-10 border-2 border-dashed border-indigo-300 bg-indigo-50/50 dark:border-indigo-600 dark:bg-indigo-950/20"
               : "h-1"
-          }`}
+            }`}
         />
       )}
     </div>
