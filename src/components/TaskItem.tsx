@@ -85,6 +85,7 @@ export default function TaskItem({ task, onUpdate, onDelete, isOverlay }: Props)
 
   // Enter키로 포커스 해제
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "Enter") {
       (e.target as HTMLElement).blur();
     }
