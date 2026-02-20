@@ -359,7 +359,8 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
           const activeIdx = groupTasks.findIndex((t) => t.id === activeTaskId);
           const overIdx = groupTasks.findIndex((t) => t.id === overTaskId);
           if (activeIdx === -1 || overIdx === -1) return prev;
-          return [...others, ...arrayMove(groupTasks, activeIdx, overIdx)];
+          const reordered = arrayMove(groupTasks, activeIdx, overIdx);
+          return [...others, ...reordered.map((t, i) => ({ ...t, order: i }))];
         });
       }
       return;
@@ -442,6 +443,15 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
       }
 
       if (moves.length === 0) return;
+
+      // 로컬 state의 order 필드를 최종 계산 결과로 동기화
+      const moveMap = new Map(moves.map((m) => [m.id, m]));
+      setTasks((prev) =>
+        prev.map((t) => {
+          const m = moveMap.get(t.id);
+          return m ? { ...t, order: m.order, groupId: m.groupId } : t;
+        }),
+      );
 
       try {
         const res = await fetch("/api/tasks/reorder", {
