@@ -12,6 +12,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   const { id } = await params;
+  const userObjectId = new ObjectId(userId);
 
   let objectId: ObjectId;
   try {
@@ -62,7 +63,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const col = await getTaskCollection();
   const result = await col.findOneAndUpdate(
-    { _id: objectId, userId: new ObjectId(userId) },
+    { _id: objectId, userId: userObjectId },
     { $set: update },
     { returnDocument: "after" },
   );
@@ -82,6 +83,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
+  const userObjectId = new ObjectId(userId);
 
   let objectId: ObjectId;
   try {
@@ -91,7 +93,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   }
 
   const col = await getTaskCollection();
-  const result = await col.deleteOne({ _id: objectId, userId: new ObjectId(userId) });
+  const result = await col.deleteOne({ _id: objectId, userId: userObjectId });
 
   if (result.deletedCount === 0) {
     return NextResponse.json({ error: "태스크를 찾을 수 없습니다" }, { status: 404 });

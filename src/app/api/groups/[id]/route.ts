@@ -13,6 +13,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   const { id } = await params;
+  const userObjectId = new ObjectId(userId);
 
   let objectId: ObjectId;
   try {
@@ -43,7 +44,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const col = await getGroupCollection();
   const result = await col.findOneAndUpdate(
-    { _id: objectId, userId: new ObjectId(userId) },
+    { _id: objectId, userId: userObjectId },
     { $set: update },
     { returnDocument: "after" },
   );
@@ -63,6 +64,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
+  const userObjectId = new ObjectId(userId);
 
   let objectId: ObjectId;
   try {
@@ -74,7 +76,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const groupCol = await getGroupCollection();
   const taskCol = await getTaskCollection();
 
-  const group = await groupCol.findOne({ _id: objectId, userId: new ObjectId(userId) });
+  const group = await groupCol.findOne({ _id: objectId, userId: userObjectId });
   if (!group) {
     return NextResponse.json({ error: "그룹을 찾을 수 없습니다" }, { status: 404 });
   }

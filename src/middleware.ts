@@ -5,6 +5,10 @@ import { jwtVerify } from "jose";
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "myos-default-jwt-secret-change-in-production",
 );
+
+if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+  throw new Error("프로덕션 환경에서는 JWT_SECRET 환경 변수가 필수입니다");
+}
 const COOKIE_NAME = "myos-token";
 
 // 인증이 필요하지 않은 경로들
