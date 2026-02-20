@@ -2,18 +2,29 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
 import { serializeTask, TaskDocument } from "@/types/task";
+import { getCurrentUserId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/tasks — 전체 태스크 목록 (order 순)
 export async function GET() {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   const col = await getTaskCollection();
-  const docs = await col.find().sort({ order: 1 }).toArray();
+  const docs = await col.find({ userId: new ObjectId(userId) }).sort({ order: 1 }).toArray();
   return NextResponse.json({ tasks: docs.map(serializeTask) });
 }
 
 // POST /api/tasks — 태스크 생성
 export async function POST(req: Request) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   const body = await req.json();
   const { title, duration, groupId } = body;
 
@@ -39,7 +50,9 @@ export async function POST(req: Request) {
 
   const col = await getTaskCollection();
   // 같은 그룹 내 최대 order 계산
-  const filter = parsedGroupId ? { groupId: parsedGroupId } : { groupId: null };
+  const filter = parsedGroupId
+    ? { groupId: parsedGroupId, userId: new ObjectId(userId) }
+    : { groupId: null, userId: new ObjectId(userId) };
   const last = await col.find(filter).sort({ order: -1 }).limit(1).toArray();
   const order = last.length > 0 ? last[0].order + 1 : 0;
 
@@ -49,6 +62,7 @@ export async function POST(req: Request) {
     memo: "",
     order,
     groupId: parsedGroupId,
+    userId: new ObjectId(userId),
     createdAt: new Date(),
   };
 

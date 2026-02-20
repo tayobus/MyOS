@@ -1,22 +1,42 @@
+import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
 import { getGroupCollection } from "@/lib/groups";
 import { serializeTask } from "@/types/task";
 import { serializeGroup } from "@/types/group";
+import { getCurrentUserId } from "@/lib/auth";
+import { getUserCollection } from "@/lib/users";
+import { serializeUser, UserDocument } from "@/types/user";
 import TaskBoard from "@/components/TaskBoard";
+import UserHeader from "@/components/UserHeader";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [taskCol, groupCol] = await Promise.all([
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const [taskCol, groupCol, userCol] = await Promise.all([
     getTaskCollection(),
     getGroupCollection(),
+    getUserCollection(),
   ]);
-  const [taskDocs, groupDocs] = await Promise.all([
-    taskCol.find().sort({ order: 1 }).toArray(),
-    groupCol.find().sort({ order: 1 }).toArray(),
+  const userObjectId = new ObjectId(userId);
+  const [taskDocs, groupDocs, userDoc] = await Promise.all([
+    taskCol.find({ userId: userObjectId }).sort({ order: 1 }).toArray(),
+    groupCol.find({ userId: userObjectId }).sort({ order: 1 }).toArray(),
+    userCol.findOne({ _id: userObjectId }),
   ]);
+
+  if (!userDoc) {
+    redirect("/login");
+  }
+
   const initialTasks = taskDocs.map(serializeTask);
   const initialGroups = groupDocs.map(serializeGroup);
+  const user = serializeUser(userDoc as UserDocument);
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950">
@@ -32,6 +52,8 @@ export default async function Home() {
               My Tasks
             </h1>
           </div>
+
+          <UserHeader user={user} />
 
           <TaskBoard initialTasks={initialTasks} initialGroups={initialGroups} />
         </div>

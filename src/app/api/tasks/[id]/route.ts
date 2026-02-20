@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
 import { serializeTask, TaskDocument } from "@/types/task";
+import { getCurrentUserId } from "@/lib/auth";
 
 // PATCH /api/tasks/[id] — 태스크 수정 (title, duration)
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -56,7 +62,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const col = await getTaskCollection();
   const result = await col.findOneAndUpdate(
-    { _id: objectId },
+    { _id: objectId, userId: new ObjectId(userId) },
     { $set: update },
     { returnDocument: "after" },
   );
@@ -70,6 +76,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 // DELETE /api/tasks/[id] — 태스크 삭제
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -80,7 +91,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   }
 
   const col = await getTaskCollection();
-  const result = await col.deleteOne({ _id: objectId });
+  const result = await col.deleteOne({ _id: objectId, userId: new ObjectId(userId) });
 
   if (result.deletedCount === 0) {
     return NextResponse.json({ error: "태스크를 찾을 수 없습니다" }, { status: 404 });

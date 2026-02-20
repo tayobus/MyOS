@@ -3,9 +3,15 @@ import { ObjectId } from "mongodb";
 import { getGroupCollection } from "@/lib/groups";
 import { getTaskCollection } from "@/lib/tasks";
 import { serializeGroup, GroupDocument } from "@/types/group";
+import { getCurrentUserId } from "@/lib/auth";
 
 // PATCH /api/groups/[id] — 그룹 수정 (name, collapsed)
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -37,7 +43,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const col = await getGroupCollection();
   const result = await col.findOneAndUpdate(
-    { _id: objectId },
+    { _id: objectId, userId: new ObjectId(userId) },
     { $set: update },
     { returnDocument: "after" },
   );
@@ -51,6 +57,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 // DELETE /api/groups/[id] — 그룹 삭제 (소속 태스크는 미분류로)
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -63,7 +74,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const groupCol = await getGroupCollection();
   const taskCol = await getTaskCollection();
 
-  const group = await groupCol.findOne({ _id: objectId });
+  const group = await groupCol.findOne({ _id: objectId, userId: new ObjectId(userId) });
   if (!group) {
     return NextResponse.json({ error: "그룹을 찾을 수 없습니다" }, { status: 404 });
   }

@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
+import { getCurrentUserId } from "@/lib/auth";
 
 // PATCH /api/tasks/reorder — 태스크 순서/그룹 일괄 변경
 // Body: { moves: Array<{ id: string, groupId: string | null, order: number }> }
 export async function PATCH(req: Request) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { moves } = body;
@@ -22,7 +28,7 @@ export async function PATCH(req: Request) {
 
           return {
             updateOne: {
-              filter: { _id: taskObjectId },
+              filter: { _id: taskObjectId, userId: new ObjectId(userId) },
               update: { $set: { groupId: groupObjectId, order: move.order } },
             },
           };

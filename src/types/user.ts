@@ -1,31 +1,28 @@
 import { ObjectId } from "mongodb";
 
 // 클라이언트용 직렬화 타입
-export interface Group {
+export interface User {
   id: string;
+  email: string;
   name: string;
-  order: number;
-  collapsed: boolean;
   createdAt: string; // ISO 8601
 }
 
 // MongoDB 도큐먼트 타입 (서버 전용)
-export interface GroupDocument {
+export interface UserDocument {
   _id: ObjectId;
+  email: string;
   name: string;
-  order: number;
-  collapsed: boolean;
-  userId: ObjectId;
+  passwordHash: string;
   createdAt: Date;
 }
 
-// GroupDocument → Group 직렬화
-export function serializeGroup(doc: GroupDocument): Group {
+// UserDocument → User 직렬화 (비밀번호 제외)
+export function serializeUser(doc: UserDocument): User {
   return {
     id: doc._id.toHexString(),
+    email: doc.email,
     name: doc.name,
-    order: doc.order,
-    collapsed: doc.collapsed ?? false,
     createdAt: doc.createdAt.toISOString(),
   };
 }
