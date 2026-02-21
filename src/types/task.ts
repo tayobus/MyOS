@@ -19,6 +19,7 @@ export interface TaskDocument {
   memo: string;
   order: number;
   groupId: ObjectId | null;
+  userId: ObjectId;
   createdAt: Date;
 }
 

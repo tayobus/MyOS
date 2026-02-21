@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getGroupCollection } from "@/lib/groups";
+import { getCurrentUserId } from "@/lib/auth";
 
 // PATCH /api/groups/reorder — 그룹 순서 일괄 변경
 export async function PATCH(req: Request) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { orderedIds } = body;
@@ -22,7 +28,7 @@ export async function PATCH(req: Request) {
     const col = await getGroupCollection();
     const operations = objectIds.map((oid, index) => ({
       updateOne: {
-        filter: { _id: oid },
+        filter: { _id: oid, userId: new ObjectId(userId) },
         update: { $set: { order: index } },
       },
     }));
