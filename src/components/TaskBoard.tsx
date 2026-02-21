@@ -275,11 +275,23 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
 
   const handleDeleteGroup = useCallback(
     async (id: string) => {
+      const groupTasks = tasksByGroup.get(id) ?? [];
+      const taskCount = groupTasks.length;
+
+      // 삭제 전 확인 다이얼로그
+      const groupName = groupsRef.current.find((g) => g.id === id)?.name ?? "이 그룹";
+      const message =
+        taskCount > 0
+          ? `"${groupName}"을(를) 삭제하면 안에 있는 태스크 ${taskCount}개도 함께 삭제됩니다.\n정말 삭제하시겠습니까?`
+          : `"${groupName}"을(를) 삭제하시겠습니까?`;
+      if (!window.confirm(message)) return;
+
       const previousGroups = [...groupsRef.current];
       const previousTasks = [...tasksRef.current];
 
       setGroups((prev) => prev.filter((g) => g.id !== id));
-      setTasks((prev) => prev.map((t) => (t.groupId === id ? { ...t, groupId: null } : t)));
+      // 소속 태스크도 함께 제거
+      setTasks((prev) => prev.filter((t) => t.groupId !== id));
 
       try {
         const res = await fetch(`/api/groups/${id}`, { method: "DELETE" });
@@ -295,7 +307,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
         showToast("그룹 삭제에 실패했습니다.", "error");
       }
     },
-    [showToast],
+    [tasksByGroup, showToast],
   );
 
   // --- DnD 핸들러 ---

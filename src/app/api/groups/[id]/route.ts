@@ -49,7 +49,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return NextResponse.json({ group: serializeGroup(result as GroupDocument) });
 }
 
-// DELETE /api/groups/[id] — 그룹 삭제 (소속 태스크는 미분류로)
+// DELETE /api/groups/[id] — 그룹 삭제 (소속 태스크도 함께 삭제)
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -68,11 +68,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "그룹을 찾을 수 없습니다" }, { status: 404 });
   }
 
-  // 소속 태스크를 미분류(groupId: null)로 이동
-  await taskCol.updateMany(
-    { groupId: objectId },
-    { $set: { groupId: null } },
-  );
+  // 소속 태스크 모두 삭제
+  await taskCol.deleteMany({ groupId: objectId });
 
   await groupCol.deleteOne({ _id: objectId });
 
