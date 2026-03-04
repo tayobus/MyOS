@@ -47,6 +47,7 @@ export async function POST(req: Request) {
     title: title.trim(),
     duration,
     memo: "",
+    completed: false,
     order,
     groupId: parsedGroupId,
     createdAt: new Date(),

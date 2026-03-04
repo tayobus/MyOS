@@ -136,6 +136,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
         title: "새 태스크",
         duration: 25,
         memo: "",
+        completed: false,
         order: groupTasks.length,
         groupId,
         createdAt: new Date().toISOString(),
@@ -169,7 +170,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
   );
 
   const handleUpdateTask = useCallback(
-    async (id: string, fields: Partial<Pick<Task, "title" | "duration" | "memo">>) => {
+    async (id: string, fields: Partial<Pick<Task, "title" | "duration" | "memo" | "completed">>) => {
       const previousTasks = [...tasksRef.current];
       setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...fields } : t)));
 

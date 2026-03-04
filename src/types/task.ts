@@ -6,6 +6,7 @@ export interface Task {
   title: string;
   duration: number; // 분 단위
   memo: string;
+  completed: boolean; // 완료 여부
   order: number;
   groupId: string | null; // null = 미분류
   createdAt: string; // ISO 8601
@@ -17,6 +18,7 @@ export interface TaskDocument {
   title: string;
   duration: number;
   memo: string;
+  completed: boolean;
   order: number;
   groupId: ObjectId | null;
   createdAt: Date;
@@ -29,6 +31,7 @@ export function serializeTask(doc: TaskDocument): Task {
     title: doc.title,
     duration: doc.duration,
     memo: doc.memo ?? "",
+    completed: doc.completed ?? false,
     order: doc.order,
     groupId: doc.groupId ? doc.groupId.toHexString() : null,
     createdAt: doc.createdAt.toISOString(),
