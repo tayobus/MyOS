@@ -49,6 +49,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       }
     }
   }
+  if (body.completed !== undefined) {
+    if (typeof body.completed !== "boolean") {
+      return NextResponse.json({ error: "completed는 boolean이어야 합니다" }, { status: 400 });
+    }
+    update.completed = body.completed;
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "수정할 필드가 없습니다" }, { status: 400 });

@@ -14,7 +14,7 @@ interface Props {
   tasks: Task[];
   onUpdateGroup: (id: string, fields: Partial<Pick<Group, "name" | "collapsed">>) => void;
   onDeleteGroup: (id: string) => void;
-  onUpdateTask: (id: string, fields: Partial<Pick<Task, "title" | "duration" | "memo">>) => void;
+  onUpdateTask: (id: string, fields: Partial<Pick<Task, "title" | "duration" | "memo" | "completed">>) => void;
   onDeleteTask: (id: string) => void;
   onAddTask: (groupId: string) => void;
   isOverlay?: boolean;

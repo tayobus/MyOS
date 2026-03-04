@@ -7,7 +7,7 @@ import { Task, formatDuration } from "@/types/task";
 
 interface Props {
   task: Task;
-  onUpdate: (id: string, fields: Partial<Pick<Task, "title" | "duration" | "memo">>) => void;
+  onUpdate: (id: string, fields: Partial<Pick<Task, "title" | "duration" | "memo" | "completed">>) => void;
   onDelete: (id: string) => void;
   isOverlay?: boolean;
 }
@@ -120,6 +120,23 @@ export default function TaskItem({ task, onUpdate, onDelete, isOverlay }: Props)
           </svg>
         </button>
 
+        {/* 완료 체크박스 */}
+        <button
+          onClick={() => onUpdate(task.id, { completed: !task.completed })}
+          className={`flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+            task.completed
+              ? "bg-indigo-500 border-indigo-500 text-white"
+              : "border-slate-300 hover:border-indigo-400 dark:border-slate-600 dark:hover:border-indigo-400"
+          }`}
+          aria-label={task.completed ? "완료 해제" : "완료 표시"}
+        >
+          {task.completed && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </button>
+
         {/* 태스크명 */}
         <div className="flex-1 min-w-0">
           <input
@@ -129,7 +146,11 @@ export default function TaskItem({ task, onUpdate, onDelete, isOverlay }: Props)
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
             onKeyDown={handleKeyDown}
-            className="w-full bg-transparent text-slate-800 placeholder:text-slate-400 focus:outline-none font-medium dark:text-slate-200"
+            className={`w-full bg-transparent placeholder:text-slate-400 focus:outline-none font-medium dark:text-slate-200 ${
+              task.completed
+                ? "line-through text-slate-400 dark:text-slate-500"
+                : "text-slate-800"
+            }`}
             placeholder="할일을 입력하세요"
           />
         </div>
