@@ -70,8 +70,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const groupCol = await getGroupCollection();
     const taskCol = await getTaskCollection();
 
-    // 소속 태스크도 영구 삭제
-    await taskCol.deleteMany({ groupId: objectId });
+    // 휴지통에 있는 소속 태스크도 영구 삭제
+    await taskCol.deleteMany({ groupId: objectId, deletedAt: { $ne: null } });
     const result = await groupCol.deleteOne({ _id: objectId, deletedAt: { $ne: null } });
 
     if (result.deletedCount === 0) {

@@ -31,8 +31,8 @@ export default function TrashModal({ open, onClose, onRestored }: Props) {
         ];
         // deletedAt 기준 최신순 정렬
         trashItems.sort((a, b) => {
-          const aDate = a.type === "task" ? a.data.deletedAt : a.data.deletedAt;
-          const bDate = b.type === "task" ? b.data.deletedAt : b.data.deletedAt;
+          const aDate = a.data.deletedAt;
+          const bDate = b.data.deletedAt;
           return new Date(bDate!).getTime() - new Date(aDate!).getTime();
         });
         setItems(trashItems);
