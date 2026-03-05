@@ -28,6 +28,7 @@ import TaskItem from "./TaskItem";
 import GroupCard from "./GroupCard";
 import AddTaskButton from "./AddTaskButton";
 import AddGroupButton from "./AddGroupButton";
+import TrashModal from "./TrashModal";
 
 interface Props {
   initialTasks: Task[];
@@ -76,6 +77,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingGroup, setIsAddingGroup] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [trashOpen, setTrashOpen] = useState(false);
 
   // 최신 state를 ref로 추적 (클로저 stale state 방지)
   const tasksRef = useRef(tasks);
@@ -94,6 +96,27 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);
   }, []);
+
+  // 휴지통에서 복원 후 목록 새로고침
+  const handleTrashRestored = useCallback(async () => {
+    try {
+      const [tasksRes, groupsRes] = await Promise.all([
+        fetch("/api/tasks"),
+        fetch("/api/groups"),
+      ]);
+      if (tasksRes.ok && groupsRes.ok) {
+        const [tasksData, groupsData] = await Promise.all([
+          tasksRes.json(),
+          groupsRes.json(),
+        ]);
+        setTasks(tasksData.tasks);
+        setGroups(groupsData.groups);
+        showToast("항목이 복원되었습니다.");
+      }
+    } catch (error) {
+      console.error("목록 새로고침 실패:", error);
+    }
+  }, [showToast]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -140,6 +163,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
         order: groupTasks.length,
         groupId,
         createdAt: new Date().toISOString(),
+        deletedAt: null,
       };
 
       setTasks((prev) => [...prev, newTask]);
@@ -198,7 +222,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
       try {
         const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
         if (res.ok) {
-          showToast("태스크가 삭제되었습니다.");
+          showToast("휴지통으로 이동했습니다.");
         } else {
           throw new Error("Failed to delete task");
         }
@@ -223,6 +247,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
       order: groups.length,
       collapsed: false,
       createdAt: new Date().toISOString(),
+      deletedAt: null,
     };
 
     setGroups((prev) => [...prev, newGroup]);
@@ -283,8 +308,8 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
       const groupName = groupsRef.current.find((g) => g.id === id)?.name ?? "이 그룹";
       const message =
         taskCount > 0
-          ? `"${groupName}"을(를) 삭제하면 안에 있는 태스크 ${taskCount}개도 함께 삭제됩니다.\n정말 삭제하시겠습니까?`
-          : `"${groupName}"을(를) 삭제하시겠습니까?`;
+          ? `"${groupName}"을(를) 휴지통으로 이동하면 안에 있는 태스크 ${taskCount}개도 함께 이동됩니다.\n계속하시겠습니까?`
+          : `"${groupName}"을(를) 휴지통으로 이동하시겠습니까?`;
       if (!window.confirm(message)) return;
 
       const previousGroups = [...groupsRef.current];
@@ -297,7 +322,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
       try {
         const res = await fetch(`/api/groups/${id}`, { method: "DELETE" });
         if (res.ok) {
-          showToast("그룹이 삭제되었습니다.");
+          showToast("휴지통으로 이동했습니다.");
         } else {
           throw new Error("Failed to delete group");
         }
@@ -305,7 +330,7 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
         console.error(error);
         setGroups(previousGroups);
         setTasks(previousTasks);
-        showToast("그룹 삭제에 실패했습니다.", "error");
+        showToast("그룹 이동에 실패했습니다.", "error");
       }
     },
     [tasksByGroup, showToast],
@@ -589,13 +614,35 @@ export default function TaskBoard({ initialTasks, initialGroups }: Props) {
         <AddGroupButton onAdd={handleAddGroup} disabled={isAddingGroup} />
       </div>
 
-      {/* 총 소요시간 */}
-      {tasks.length > 0 && (
-        <div className="mt-6 flex justify-end items-center text-sm font-medium text-gray-500 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100 w-fit ml-auto">
-          <span>총 예상 소요시간:</span>
-          <span className="ml-2 text-indigo-600 font-bold">{formatDuration(totalMinutes)}</span>
-        </div>
-      )}
+      {/* 총 소요시간 + 휴지통 */}
+      <div className="mt-6 flex justify-between items-center">
+        <button
+          onClick={() => setTrashOpen(true)}
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 px-3 py-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+          aria-label="휴지통 열기"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18" />
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+          </svg>
+          휴지통
+        </button>
+
+        {tasks.length > 0 && (
+          <div className="flex items-center text-sm font-medium text-gray-500 bg-white dark:bg-slate-800 px-4 py-2 rounded-lg shadow-sm border border-gray-100 dark:border-slate-700">
+            <span>총 예상 소요시간:</span>
+            <span className="ml-2 text-indigo-600 dark:text-indigo-400 font-bold">{formatDuration(totalMinutes)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* 휴지통 모달 */}
+      <TrashModal
+        open={trashOpen}
+        onClose={() => setTrashOpen(false)}
+        onRestored={handleTrashRestored}
+      />
     </div>
   );
 }

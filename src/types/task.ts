@@ -10,6 +10,7 @@ export interface Task {
   order: number;
   groupId: string | null; // null = 미분류
   createdAt: string; // ISO 8601
+  deletedAt: string | null; // 휴지통 이동 시각 (null = 삭제되지 않음)
 }
 
 // MongoDB 도큐먼트 타입 (서버 전용)
@@ -22,6 +23,7 @@ export interface TaskDocument {
   order: number;
   groupId: ObjectId | null;
   createdAt: Date;
+  deletedAt: Date | null;
 }
 
 // TaskDocument → Task 직렬화
@@ -35,6 +37,7 @@ export function serializeTask(doc: TaskDocument): Task {
     order: doc.order,
     groupId: doc.groupId ? doc.groupId.toHexString() : null,
     createdAt: doc.createdAt.toISOString(),
+    deletedAt: doc.deletedAt ? doc.deletedAt.toISOString() : null,
   };
 }
 

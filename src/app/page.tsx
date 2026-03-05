@@ -12,8 +12,8 @@ export default async function Home() {
     getGroupCollection(),
   ]);
   const [taskDocs, groupDocs] = await Promise.all([
-    taskCol.find().sort({ order: 1 }).toArray(),
-    groupCol.find().sort({ order: 1 }).toArray(),
+    taskCol.find({ deletedAt: null }).sort({ order: 1 }).toArray(),
+    groupCol.find({ deletedAt: null }).sort({ order: 1 }).toArray(),
   ]);
   const initialTasks = taskDocs.map(serializeTask);
   const initialGroups = groupDocs.map(serializeGroup);
