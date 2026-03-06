@@ -74,7 +74,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return NextResponse.json({ task: serializeTask(result as TaskDocument) });
 }
 
-// DELETE /api/tasks/[id] — 태스크 삭제
+// DELETE /api/tasks/[id] — 태스크 휴지통으로 이동 (soft delete)
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -86,9 +86,13 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   }
 
   const col = await getTaskCollection();
-  const result = await col.deleteOne({ _id: objectId });
+  const result = await col.findOneAndUpdate(
+    { _id: objectId, deletedAt: null },
+    { $set: { deletedAt: new Date() } },
+    { returnDocument: "after" },
+  );
 
-  if (result.deletedCount === 0) {
+  if (!result) {
     return NextResponse.json({ error: "태스크를 찾을 수 없습니다" }, { status: 404 });
   }
 

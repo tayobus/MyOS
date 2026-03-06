@@ -7,6 +7,7 @@ export interface Group {
   order: number;
   collapsed: boolean;
   createdAt: string; // ISO 8601
+  deletedAt: string | null; // 휴지통 이동 시각 (null = 삭제되지 않음)
 }
 
 // MongoDB 도큐먼트 타입 (서버 전용)
@@ -16,6 +17,7 @@ export interface GroupDocument {
   order: number;
   collapsed: boolean;
   createdAt: Date;
+  deletedAt: Date | null;
 }
 
 // GroupDocument → Group 직렬화
@@ -26,5 +28,6 @@ export function serializeGroup(doc: GroupDocument): Group {
     order: doc.order,
     collapsed: doc.collapsed ?? false,
     createdAt: doc.createdAt.toISOString(),
+    deletedAt: doc.deletedAt ? doc.deletedAt.toISOString() : null,
   };
 }

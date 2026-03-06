@@ -49,7 +49,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return NextResponse.json({ group: serializeGroup(result as GroupDocument) });
 }
 
-// DELETE /api/groups/[id] — 그룹 삭제 (소속 태스크도 함께 삭제)
+// DELETE /api/groups/[id] — 그룹 휴지통으로 이동 (소속 태스크도 함께)
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -63,15 +63,23 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const groupCol = await getGroupCollection();
   const taskCol = await getTaskCollection();
 
-  const group = await groupCol.findOne({ _id: objectId });
+  const now = new Date();
+
+  const group = await groupCol.findOneAndUpdate(
+    { _id: objectId, deletedAt: null },
+    { $set: { deletedAt: now } },
+    { returnDocument: "after" },
+  );
+
   if (!group) {
     return NextResponse.json({ error: "그룹을 찾을 수 없습니다" }, { status: 404 });
   }
 
-  // 소속 태스크 모두 삭제
-  await taskCol.deleteMany({ groupId: objectId });
-
-  await groupCol.deleteOne({ _id: objectId });
+  // 소속 태스크도 함께 휴지통으로 이동
+  await taskCol.updateMany(
+    { groupId: objectId, deletedAt: null },
+    { $set: { deletedAt: now } },
+  );
 
   return NextResponse.json({ success: true });
 }

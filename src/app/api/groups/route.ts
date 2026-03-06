@@ -4,10 +4,10 @@ import { serializeGroup, GroupDocument } from "@/types/group";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/groups — 전체 그룹 목록 (order 순)
+// GET /api/groups — 전체 그룹 목록 (삭제되지 않은 것만, order 순)
 export async function GET() {
   const col = await getGroupCollection();
-  const docs = await col.find().sort({ order: 1 }).toArray();
+  const docs = await col.find({ deletedAt: null }).sort({ order: 1 }).toArray();
   return NextResponse.json({ groups: docs.map(serializeGroup) });
 }
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   }
 
   const col = await getGroupCollection();
-  const last = await col.find().sort({ order: -1 }).limit(1).toArray();
+  const last = await col.find({ deletedAt: null }).sort({ order: -1 }).limit(1).toArray();
   const order = last.length > 0 ? last[0].order + 1 : 0;
 
   const doc = {
@@ -29,6 +29,7 @@ export async function POST(req: Request) {
     order,
     collapsed: false,
     createdAt: new Date(),
+    deletedAt: null,
   };
 
   const result = await col.insertOne(doc as GroupDocument);

@@ -5,10 +5,10 @@ import { serializeTask, TaskDocument } from "@/types/task";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/tasks — 전체 태스크 목록 (order 순)
+// GET /api/tasks — 전체 태스크 목록 (삭제되지 않은 것만, order 순)
 export async function GET() {
   const col = await getTaskCollection();
-  const docs = await col.find().sort({ order: 1 }).toArray();
+  const docs = await col.find({ deletedAt: null }).sort({ order: 1 }).toArray();
   return NextResponse.json({ tasks: docs.map(serializeTask) });
 }
 
@@ -38,8 +38,10 @@ export async function POST(req: Request) {
   }
 
   const col = await getTaskCollection();
-  // 같은 그룹 내 최대 order 계산
-  const filter = parsedGroupId ? { groupId: parsedGroupId } : { groupId: null };
+  // 같은 그룹 내 최대 order 계산 (삭제되지 않은 것만)
+  const filter = parsedGroupId
+    ? { groupId: parsedGroupId, deletedAt: null }
+    : { groupId: null, deletedAt: null };
   const last = await col.find(filter).sort({ order: -1 }).limit(1).toArray();
   const order = last.length > 0 ? last[0].order + 1 : 0;
 
@@ -51,6 +53,7 @@ export async function POST(req: Request) {
     order,
     groupId: parsedGroupId,
     createdAt: new Date(),
+    deletedAt: null,
   };
 
   const result = await col.insertOne(doc as TaskDocument);
