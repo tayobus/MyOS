@@ -16,6 +16,7 @@ export interface Task {
 // MongoDB 도큐먼트 타입 (서버 전용)
 export interface TaskDocument {
   _id: ObjectId;
+  userId: ObjectId;
   title: string;
   duration: number;
   memo: string;

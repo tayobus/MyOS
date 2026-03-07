@@ -1,19 +1,32 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
 import { getGroupCollection } from "@/lib/groups";
 import { serializeTask } from "@/types/task";
 import { serializeGroup } from "@/types/group";
+import { verifyToken } from "@/lib/auth/token";
 import TaskBoard from "@/components/TaskBoard";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  if (!token) redirect("/login");
+
+  const payload = await verifyToken(token);
+  if (!payload) redirect("/login");
+
+  const userId = new ObjectId(payload.userId);
+
   const [taskCol, groupCol] = await Promise.all([
     getTaskCollection(),
     getGroupCollection(),
   ]);
   const [taskDocs, groupDocs] = await Promise.all([
-    taskCol.find({ deletedAt: null }).sort({ order: 1 }).toArray(),
-    groupCol.find({ deletedAt: null }).sort({ order: 1 }).toArray(),
+    taskCol.find({ deletedAt: null, userId }).sort({ order: 1 }).toArray(),
+    groupCol.find({ deletedAt: null, userId }).sort({ order: 1 }).toArray(),
   ]);
   const initialTasks = taskDocs.map(serializeTask);
   const initialGroups = groupDocs.map(serializeGroup);

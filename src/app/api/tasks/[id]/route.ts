@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
 import { serializeTask, TaskDocument } from "@/types/task";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // PATCH /api/tasks/[id] — 태스크 수정 (title, duration)
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -62,7 +69,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const col = await getTaskCollection();
   const result = await col.findOneAndUpdate(
-    { _id: objectId },
+    { _id: objectId, userId },
     { $set: update },
     { returnDocument: "after" },
   );
@@ -75,7 +82,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 // DELETE /api/tasks/[id] — 태스크 휴지통으로 이동 (soft delete)
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -87,7 +100,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const col = await getTaskCollection();
   const result = await col.findOneAndUpdate(
-    { _id: objectId, deletedAt: null },
+    { _id: objectId, deletedAt: null, userId },
     { $set: { deletedAt: new Date() } },
     { returnDocument: "after" },
   );
