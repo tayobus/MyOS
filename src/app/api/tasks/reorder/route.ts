@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // PATCH /api/tasks/reorder — 태스크 순서/그룹 일괄 변경
 // Body: { moves: Array<{ id: string, groupId: string | null, order: number }> }
 export async function PATCH(req: Request) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   try {
     const body = await req.json();
     const { moves } = body;
@@ -22,7 +29,7 @@ export async function PATCH(req: Request) {
 
           return {
             updateOne: {
-              filter: { _id: taskObjectId },
+              filter: { _id: taskObjectId, userId },
               update: { $set: { groupId: groupObjectId, order: move.order } },
             },
           };

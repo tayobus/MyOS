@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTaskCollection } from "@/lib/tasks";
 import { getGroupCollection } from "@/lib/groups";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // PATCH /api/trash/[id] — 휴지통에서 복원 (type 쿼리 파라미터로 task/group 구분)
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   const { id } = await params;
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type"); // "task" | "group"
@@ -21,7 +28,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const taskCol = await getTaskCollection();
 
     const result = await groupCol.findOneAndUpdate(
-      { _id: objectId, deletedAt: { $ne: null } },
+      { _id: objectId, deletedAt: { $ne: null }, userId },
       { $set: { deletedAt: null } },
       { returnDocument: "after" },
     );
@@ -31,7 +38,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     // 같은 그룹에 속한 삭제된 태스크들도 함께 복원
     await taskCol.updateMany(
-      { groupId: objectId, deletedAt: { $ne: null } },
+      { groupId: objectId, deletedAt: { $ne: null }, userId },
       { $set: { deletedAt: null } },
     );
 
@@ -41,7 +48,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   // 기본: 태스크 복원
   const taskCol = await getTaskCollection();
   const result = await taskCol.findOneAndUpdate(
-    { _id: objectId, deletedAt: { $ne: null } },
+    { _id: objectId, deletedAt: { $ne: null }, userId },
     { $set: { deletedAt: null } },
     { returnDocument: "after" },
   );
@@ -55,6 +62,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 // DELETE /api/trash/[id] — 휴지통에서 영구 삭제
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   const { id } = await params;
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type"); // "task" | "group"
@@ -71,8 +84,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const taskCol = await getTaskCollection();
 
     // 휴지통에 있는 소속 태스크도 영구 삭제
-    await taskCol.deleteMany({ groupId: objectId, deletedAt: { $ne: null } });
-    const result = await groupCol.deleteOne({ _id: objectId, deletedAt: { $ne: null } });
+    await taskCol.deleteMany({ groupId: objectId, deletedAt: { $ne: null }, userId });
+    const result = await groupCol.deleteOne({ _id: objectId, deletedAt: { $ne: null }, userId });
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "그룹을 찾을 수 없습니다" }, { status: 404 });
@@ -82,7 +95,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   // 기본: 태스크 영구 삭제
   const taskCol = await getTaskCollection();
-  const result = await taskCol.deleteOne({ _id: objectId, deletedAt: { $ne: null } });
+  const result = await taskCol.deleteOne({ _id: objectId, deletedAt: { $ne: null }, userId });
 
   if (result.deletedCount === 0) {
     return NextResponse.json({ error: "태스크를 찾을 수 없습니다" }, { status: 404 });

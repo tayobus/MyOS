@@ -3,9 +3,16 @@ import { ObjectId } from "mongodb";
 import { getGroupCollection } from "@/lib/groups";
 import { getTaskCollection } from "@/lib/tasks";
 import { serializeGroup, GroupDocument } from "@/types/group";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // PATCH /api/groups/[id] — 그룹 수정 (name, collapsed)
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -37,7 +44,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const col = await getGroupCollection();
   const result = await col.findOneAndUpdate(
-    { _id: objectId },
+    { _id: objectId, userId },
     { $set: update },
     { returnDocument: "after" },
   );
@@ -50,7 +57,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 // DELETE /api/groups/[id] — 그룹 휴지통으로 이동 (소속 태스크도 함께)
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   const { id } = await params;
 
   let objectId: ObjectId;
@@ -66,7 +79,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const now = new Date();
 
   const group = await groupCol.findOneAndUpdate(
-    { _id: objectId, deletedAt: null },
+    { _id: objectId, deletedAt: null, userId },
     { $set: { deletedAt: now } },
     { returnDocument: "after" },
   );
@@ -77,7 +90,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   // 소속 태스크도 함께 휴지통으로 이동
   await taskCol.updateMany(
-    { groupId: objectId, deletedAt: null },
+    { groupId: objectId, deletedAt: null, userId },
     { $set: { deletedAt: now } },
   );
 

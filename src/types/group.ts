@@ -13,6 +13,7 @@ export interface Group {
 // MongoDB 도큐먼트 타입 (서버 전용)
 export interface GroupDocument {
   _id: ObjectId;
+  userId: ObjectId;
   name: string;
   order: number;
   collapsed: boolean;

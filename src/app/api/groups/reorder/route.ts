@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getGroupCollection } from "@/lib/groups";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // PATCH /api/groups/reorder — 그룹 순서 일괄 변경
 export async function PATCH(req: Request) {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = new ObjectId(user.userId);
+
   try {
     const body = await req.json();
     const { orderedIds } = body;
@@ -22,7 +29,7 @@ export async function PATCH(req: Request) {
     const col = await getGroupCollection();
     const operations = objectIds.map((oid, index) => ({
       updateOne: {
-        filter: { _id: oid },
+        filter: { _id: oid, userId },
         update: { $set: { order: index } },
       },
     }));
