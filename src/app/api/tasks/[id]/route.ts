@@ -85,7 +85,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser(req);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 });
   }
   const userId = new ObjectId(user.userId);
 
